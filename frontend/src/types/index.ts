@@ -6,9 +6,16 @@ export interface Song {
   length: number;
 }
 
+export interface Word {
+  text: string;
+  timestamp: number;
+}
+
 export interface Verse {
   timestamp: number;
   text: string;
+  duration: number;
+  words: Word[];
 }
 
 export type Difficulty = 'easy' | 'medium' | 'hard';

@@ -122,8 +122,34 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text);
-  margin: 0;
+  margin:0;
   line-height: 1.6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.quiz__word {
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.quiz__word--current {
+  background: var(--color-accent);
+  color: #0a0a14;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+}
+
+.quiz__word--blank {
+  color: var(--color-text-muted);
+  border-bottom: 2px dashed var(--color-border);
+}
+
+.quiz__word--filled {
+  color: var(--color-success);
+  border-bottom: 2px solid var(--color-success);
 }
 
 .quiz__options {
@@ -177,6 +203,16 @@
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-8px); }
   40%, 80% { transform: translateX(8px); }
+}
+
+.quiz__selected-words {
+  text-align: center;
+  padding: 12px;
+  background: var(--color-bg-card);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 16px;
 }
 
 .quiz__score-display {

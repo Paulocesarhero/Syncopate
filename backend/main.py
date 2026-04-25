@@ -40,7 +40,7 @@ class Verse(BaseModel):
     text: str
 
 def parse_lrc(filepath: str) -> List[dict]:
-    lyrics = []
+    lines = []
     pattern = re.compile(r'\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)')
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -50,12 +50,42 @@ def parse_lrc(filepath: str) -> List[dict]:
                     minutes, seconds, ms, text = match.groups()
                     ms = ms.ljust(3, '0') if len(ms) == 2 else ms
                     timestamp = int(minutes) * 60 + int(seconds) + int(ms) / 1000
-                    lyrics.append({
+                    lines.append({
                         "timestamp": round(timestamp, 2),
                         "text": text.strip()
                     })
     except FileNotFoundError:
-        pass
+        return []
+    
+    # Calculate line durations and split into words with timestamps
+    lyrics = []
+    for i, line in enumerate(lines):
+        # Duration: time until next line or default 3s
+        duration = 3.0
+        if i < len(lines) - 1:
+            duration = round(lines[i+1]["timestamp"] - line["timestamp"], 2)
+        
+        # Split line into words
+        words = [w.strip() for w in line["text"].split(' ') if w.strip()]
+        word_count = len(words)
+        word_list = []
+        
+        if word_count > 0:
+            time_per_word = duration / word_count
+            for idx, word in enumerate(words):
+                word_timestamp = round(line["timestamp"] + (idx * time_per_word), 2)
+                word_list.append({
+                    "text": word,
+                    "timestamp": word_timestamp
+                })
+        
+        lyrics.append({
+            "timestamp": line["timestamp"],
+            "text": line["text"],
+            "duration": duration,
+            "words": word_list
+        })
+    
     return lyrics
 
 def get_songs():

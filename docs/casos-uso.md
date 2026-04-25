@@ -19,25 +19,27 @@
 1. Usuario selecciona canción del listado
 2. Usuario elige dificultad (Fácil/Medio/Difícil)
 3. Sistema carga lyrics parseados desde .lrc
-4. Sistema reproduce primer verso automáticamente
-5. Sistema muestra verso con blanks según dificultad
-6. Sistema genera 4 opciones (1 correcta + 3 distractores)
+4. Sistema reproduce el verso actual con resaltado tipo karaoke (las palabras que canta el cantante se resaltan en tiempo real, incluso si son palabras ocultas/blanks; si la canción se pausa, se mantiene el resaltado en la última palabra cantada)
+5. Sistema pausa la canción automáticamente al llegar al final del verso
+6. Sistema muestra el verso con palabras ocultas (blanks) según dificultad
+7. Sistema genera 4 opciones de palabras individuales (1 correcta + 3 distractores)
+8. La canción permanece pausada hasta que el usuario complete todas las palabras en blanco del verso
 
 ---
 
 ## UC-03: Responder Verso
 **Actor**: Usuario  
 **Flujo**:
-1. Sistema muestra 4 opciones multiple choice
-2. Usuario selecciona una opción
-3. **Si correcto**:
-   - Animación de éxito
-   - Score +1
-   - Avanzar al siguiente verso
-4. **Si incorrecto**:
-   - Feedback visual de error
-   - Opción se marca como intentada
-   - Usuario puede reintentar o hacer replay
+1. Sistema muestra 4 opciones de palabras individuales (multiple choice)
+2. Usuario selecciona las palabras faltantes para completar los blanks del verso
+3. **Si todas las palabras son correctas**:
+    - Animación de éxito
+    - Score +1 por palabra correcta
+    - Canción reanuda reproducción y avanza al siguiente verso
+4. **Si alguna palabra es incorrecta**:
+    - Feedback visual de error en la palabra incorrecta
+    - Opción se marca como intentada
+    - Usuario puede reintentar o hacer replay del verso
 
 ---
 
@@ -45,8 +47,9 @@
 **Actor**: Usuario  
 **Flujo**:
 1. Usuario hace clic en botón "Replay"
-2. Sistema reproduce nuevamente el verso actual
-3. Usuario intenta identificar la palabra/frase
+2. Sistema reproduce nuevamente el verso actual con resaltado tipo karaoke
+3. Sistema pausa la canción al final del verso hasta que el usuario complete las palabras en blanco
+4. Usuario intenta identificar las palabras faltantes
 
 ---
 

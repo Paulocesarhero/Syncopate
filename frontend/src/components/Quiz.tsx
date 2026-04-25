@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { Song, Verse, Difficulty } from '../types';
+import type { Song, Verse, Word, Difficulty } from '../types';
 import { fetchLyrics, saveProgress } from '../api/songs';
 import { useAudio } from '../hooks/useAudio';
 import './Quiz.css';
@@ -10,33 +10,36 @@ interface QuizProps {
   onBack: () => void;
 }
 
-function generateBlankedVerse(text: string, difficulty: Difficulty): string {
-  const words = text.split(' ');
+// Generate blanks in verse based on difficulty
+function generateBlanks(words: Word[], difficulty: Difficulty): (Word | null)[] {
+  const blankCount = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : words.length;
+  const eligibleIndices = words
+    .map((w, i) => (w.text.length > 2 ? i : -1))
+    .filter(i => i !== -1);
   
-  if (difficulty === 'hard') {
-    return words.map(() => '___').join(' ');
+  if (eligibleIndices.length === 0) return words as (Word | null)[];
+  
+  const blanks = new Set<number>();
+  while (blanks.size < Math.min(blankCount, eligibleIndices.length)) {
+    const randomIdx = Math.floor(Math.random() * eligibleIndices.length);
+    blanks.add(eligibleIndices[randomIdx]);
   }
   
-  const blankCount = difficulty === 'easy' ? 1 : 2;
-  const nonBlankWords = words.filter(w => w.length > 2);
+  return words.map((word, idx) => blanks.has(idx) ? null : word);
+}
+
+// Generate 4 word options (1 correct + 3 distractors)
+function generateWordOptions(correctWords: string[], allWords: string[]): string[] {
+  const uniqueCorrect = [...new Set(correctWords)];
+  const correct = uniqueCorrect[Math.floor(Math.random() * uniqueCorrect.length)];
   
-  if (nonBlankWords.length < blankCount) {
-    return words.map(() => '___').join(' ');
-  }
+  const distractors = allWords
+    .filter(w => w !== correct)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
   
-  const blanks: (string | null)[] = words.map(w => w.length > 2 ? null : w);
-  let placed = 0;
-  let idx = Math.floor(Math.random() * words.length);
-  
-  while (placed < blankCount) {
-    if (blanks[idx] === null) {
-      blanks[idx] = '___';
-      placed++;
-    }
-    idx = (idx + 1) % words.length;
-  }
-  
-  return blanks.map(w => w || '___').join(' ');
+  const options = [correct, ...distractors].sort(() => Math.random() - 0.5);
+  return options;
 }
 
 function shuffle<T>(array: T[]): T[] {
@@ -51,33 +54,80 @@ function shuffle<T>(array: T[]): T[] {
 export function Quiz({ song, difficulty, onBack }: QuizProps) {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(true);
   const [quizComplete, setQuizComplete] = useState(false);
+  const [selectedWords, setSelectedWords] = useState<(string | null)[]>([]);
+  const [wordOptions, setWordOptions] = useState<string[]>([]);
+  const [blanks, setBlanks] = useState<(Word | null)[]>([]);
+  const [currentWordIdx, setCurrentWordIdx] = useState<number | null>(null);
 
   const currentVerse = verses[currentVerseIdx];
-  const blankedVerse = currentVerse ? generateBlankedVerse(currentVerse.text, difficulty) : '';
-
   const audioUrl = `http://localhost:8000${song.audio_file}`;
 
-  const { playVerse, replayCurrentVerse, duration, seek } = useAudio({
+  // Get all words from lyrics for distractors
+  const allWords = useMemo(() => {
+    return [...new Set(verses.flatMap(v => v.words.map(w => w.text)))];
+  }, [verses]);
+
+  // Update blanks and options when verse changes
+  useEffect(() => {
+    if (!currentVerse) return;
+    
+    const newBlanks = generateBlanks(currentVerse.words, difficulty);
+    setBlanks(newBlanks);
+    
+    // Get correct words (blanks)
+    const correctWords = newBlanks
+      .filter((w): w is Word => w === null)
+      .map(() => currentVerse.words.find(w => !newBlanks.includes(w))?.text || '')
+      .filter(Boolean);
+    
+    setSelectedWords(new Array(newBlanks.filter(w => w === null).length).fill(null));
+    setWordOptions(generateWordOptions(correctWords, allWords));
+  }, [currentVerse, difficulty, allWords]);
+
+  // Track current word for karaoke highlighting
+  useEffect(() => {
+    if (!currentVerse || !currentVerse.words.length) return;
+    
+    const currentTime = 0; // We'll get this from useAudio
+    const wordIdx = currentVerse.words.findIndex(
+      (w, idx) => 
+        idx < currentVerse.words.length - 1
+          ? currentTime >= w.timestamp && currentTime < currentVerse.words[idx + 1].timestamp
+          : currentTime >= w.timestamp
+    );
+    
+    setCurrentWordIdx(wordIdx >= 0 ? wordIdx : null);
+  }, [currentVerse]);
+
+  const handleVerseEnd = useCallback(() => {
+    // Pause handled by useAudio, no additional action needed
+  }, []);
+
+  const { playVerse, replayCurrentVerse, currentTime, duration, seek, pause, play } = useAudio({
     audioSrc: audioUrl,
     verses,
+    onVerseEnd: handleVerseEnd,
   });
 
-  const options = useMemo(() => {
-    if (!currentVerse || verses.length === 0) return [];
-    const correctOption = currentVerse.text;
-    const otherVerses = verses
-      .filter((_, i) => i !== currentVerseIdx)
-      .map(v => v.text);
+  // Update current word based on audio time
+  useEffect(() => {
+    if (!currentVerse || !currentVerse.words.length) return;
     
-    const shuffledOthers = shuffle(otherVerses).slice(0, 3);
-    return shuffle([correctOption, ...shuffledOthers]);
-  }, [verses, currentVerseIdx, currentVerse]);
+    const wordIdx = currentVerse.words.findIndex(
+      (w, idx) => {
+        const nextWord = currentVerse.words[idx + 1];
+        return currentTime >= w.timestamp && 
+               (!nextWord || currentTime < nextWord.timestamp);
+      }
+    );
+    
+    setCurrentWordIdx(wordIdx >= 0 ? wordIdx : null);
+  }, [currentTime, currentVerse]);
 
+  // Load lyrics
   useEffect(() => {
     async function loadLyrics() {
       try {
@@ -92,6 +142,7 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     loadLyrics();
   }, [song.id]);
 
+  // Start first verse
   useEffect(() => {
     if (!loading && verses.length > 0 && currentVerseIdx === 0 && currentVerse) {
       const timeout = setTimeout(() => {
@@ -101,35 +152,47 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     }
   }, [loading, verses.length, currentVerseIdx, currentVerse, playVerse]);
 
-  const handleSelectOption = useCallback((optionIdx: number) => {
-    if (showResult) return;
+  // Handle word selection from options
+  const handleSelectWord = useCallback((word: string) => {
+    if (selectedWords.every(w => w !== null)) return;
     
-    setSelectedOption(optionIdx);
-    const isCorrect = options[optionIdx] === currentVerse?.text;
-    
-    setShowResult(true);
-    
-    if (isCorrect) {
-      setScore(s => s + 1);
+    const newSelected = [...selectedWords];
+    const emptyIdx = newSelected.findIndex(w => w === null);
+    if (emptyIdx >= 0) {
+      newSelected[emptyIdx] = word;
+      setSelectedWords(newSelected);
       
-      setTimeout(() => {
-        if (currentVerseIdx >= verses.length - 1) {
-          setQuizComplete(true);
-          saveProgress({ song_id: song.id, correct: score + 1, total: verses.length });
+      // Check if all blanks are filled
+      if (newSelected.every(w => w !== null)) {
+        // Check correctness
+        const correctWords = blanks
+          .map((b, idx) => b === null ? currentVerse.words[idx].text : null)
+          .filter(Boolean);
+        
+        const isCorrect = newSelected.every((w, idx) => w === correctWords[idx]);
+        
+        if (isCorrect) {
+          setScore(s => s + correctWords.length);
+          
+          // Resume audio to next verse
+          setTimeout(() => {
+            if (currentVerseIdx >= verses.length - 1) {
+              setQuizComplete(true);
+              saveProgress({ song_id: song.id, correct: score + correctWords.length, total: verses.length });
+            } else {
+              setCurrentVerseIdx(i => i + 1);
+              playVerse(currentVerseIdx + 1);
+            }
+          }, 1000);
         } else {
-          setCurrentVerseIdx(i => i + 1);
-          setSelectedOption(null);
-          setShowResult(false);
-          playVerse(currentVerseIdx + 1);
+          // Reset selected words on error
+          setTimeout(() => {
+            setSelectedWords(new Array(blanks.filter(w => w === null).length).fill(null));
+          }, 1000);
         }
-      }, 1500);
-    } else {
-      setTimeout(() => {
-        setSelectedOption(null);
-        setShowResult(false);
-      }, 1500);
+      }
     }
-  }, [showResult, options, currentVerse, currentVerseIdx, verses.length, song.id, score, playVerse]);
+  }, [selectedWords, blanks, currentVerse, currentVerseIdx, verses.length, song.id, score, playVerse]);
 
   const handleReplay = useCallback(() => {
     replayCurrentVerse();
@@ -191,36 +254,51 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
           min={0}
           max={duration}
           step={0.1}
-          defaultValue={0}
+          value={currentTime}
           onChange={handleSeek}
         />
       </div>
 
       <div className="quiz__verse">
-        <p className="quiz__verse-text">{blankedVerse}</p>
+        <div className="quiz__verse-text">
+          {currentVerse?.words.map((word, idx) => {
+            const isBlank = blanks[idx] === null;
+            const isCurrent = idx === currentWordIdx;
+            const isFilled = selectedWords.some(w => w === word.text);
+            
+            return (
+              <span
+                key={idx}
+                className={`quiz__word ${
+                  isCurrent ? 'quiz__word--current' : ''
+                } ${
+                  isBlank ? 'quiz__word--blank' : ''
+                } ${
+                  isFilled ? 'quiz__word--filled' : ''
+                }`}
+              >
+                {isBlank && !isFilled ? '___' : word.text}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
       <div className="quiz__options">
-        {options.map((option, idx) => (
+        {wordOptions.map((option, idx) => (
           <button
             key={idx}
-            className={`quiz__option ${
-              selectedOption === idx
-                ? option === currentVerse?.text
-                  ? 'quiz__option--correct'
-                  : 'quiz__option--wrong'
-                : ''
-            } ${
-              showResult && option === currentVerse?.text
-                ? 'quiz__option--reveal'
-                : ''
-            }`}
-            onClick={() => handleSelectOption(idx)}
-            disabled={showResult}
+            className="quiz__option"
+            onClick={() => handleSelectWord(option)}
+            disabled={selectedWords.every(w => w !== null)}
           >
             {option}
           </button>
         ))}
+      </div>
+
+      <div className="quiz__selected-words">
+        <p>Palabras seleccionadas: {selectedWords.filter(w => w !== null).join(', ')}</p>
       </div>
 
       <div className="quiz__score-display">
