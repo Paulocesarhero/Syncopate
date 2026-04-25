@@ -1,0 +1,16 @@
+.song-list {
+  margin-top: 48px;
+}
+
+.song-list__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text, #eeeef0);
+  margin: 0 0 20px;
+}
+
+.song-list__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

@@ -1,0 +1,126 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.loading__spinner {
+  position: relative;
+}
+
+.loading__spinner-ring {
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  animation: spin 0.8s linear infinite;
+}
+
+.loading--sm .loading__spinner-ring {
+  width: 20px;
+  height: 20px;
+}
+
+.loading--md .loading__spinner-ring {
+  width: 40px;
+  height: 40px;
+}
+
+.loading--lg .loading__spinner-ring {
+  width: 60px;
+  height: 60px;
+}
+
+.loading__message {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-bg-card) 25%, var(--color-bg-hover) 50%, var(--color-bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.song-card-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+}
+
+.song-card-skeleton__icon {
+  width: 48px;
+  height: 48px;
+}
+
+.song-card-skeleton__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.song-card-skeleton__title {
+  height: 20px;
+  width: 60%;
+}
+
+.song-card-skeleton__badge {
+  height: 16px;
+  width: 80px;
+}
+
+.song-card-skeleton__button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+@media (max-width: 480px) {
+  .song-card-skeleton {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .song-card-skeleton__icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .song-card-skeleton__button {
+    width: 36px;
+    height: 36px;
+  }
+}

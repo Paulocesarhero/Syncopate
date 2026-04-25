@@ -1,0 +1,57 @@
+.drop-zone {
+  border: 2px dashed var(--color-border, #3d3d5c);
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: var(--color-bg-secondary, #1a1a2e);
+  cursor: pointer;
+}
+
+.drop-zone:hover {
+  border-color: var(--color-accent, #00d4ff);
+  background: var(--color-bg-hover, #1f1f3a);
+}
+
+.drop-zone--dragging {
+  border-color: var(--color-accent, #00d4ff);
+  background: var(--color-bg-active, #252545);
+  transform: scale(1.02);
+}
+
+.drop-zone__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.drop-zone__icon {
+  width: 48px;
+  height: 48px;
+  color: var(--color-text-muted, #8888aa);
+  transition: color 0.2s ease;
+}
+
+.drop-zone--dragging .drop-zone__icon {
+  color: var(--color-accent, #00d4ff);
+}
+
+.drop-zone__text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text, #eeeef0);
+  margin: 0;
+}
+
+.drop-zone__hint {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #8888aa);
+  margin: 0;
+}
+
+.drop-zone__error {
+  margin-top: 16px;
+  color: var(--color-error, #ff4d6d);
+  font-size: 0.875rem;
+}
