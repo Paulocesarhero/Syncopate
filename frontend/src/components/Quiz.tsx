@@ -83,7 +83,7 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     if (!currentVerse || blankPositions.length === 0) return;
     
     const blankPos = blankPositions[currentBlankIdx];
-    if (blankPos === undefined) return;
+    if (blankPos === undefined || !currentVerse.words[blankPos]) return;
     
     const correctWord = currentVerse.words[blankPos].text;
     setWordOptions(generateWordOptions(correctWord, allWords));
@@ -175,7 +175,7 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     if (verseCompleted || blankPositions.length === 0) return;
     
     const blankPos = blankPositions[currentBlankIdx];
-    if (blankPos === undefined) return;
+    if (blankPos === undefined || !currentVerse.words[blankPos]) return;
     
     const correctWord = currentVerse.words[blankPos].text;
     
