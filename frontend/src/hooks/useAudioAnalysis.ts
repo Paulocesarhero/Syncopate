@@ -46,7 +46,7 @@ export function useAudioAnalysis({ audioElement, sampleRate = 44100 }: UseAudioA
     }
   }, [audioElement, sampleRate, isInitialized]);
 
-  const analyzeFrequencyBands = useCallback((dataArray: Uint8Array, frequencyData: Uint8Array): { energy: number; dominantFreq: number } => {
+  const analyzeFrequencyBands = useCallback((dataArray: Uint8Array, _frequencyData: Uint8Array): { energy: number; dominantFreq: number } => {
     const sampleRate = audioContextRef.current?.sampleRate || 44100;
     const bufferLength = dataArray.length;
     const binSize = sampleRate / (bufferLength * 2);

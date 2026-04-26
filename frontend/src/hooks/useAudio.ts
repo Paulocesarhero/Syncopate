@@ -6,6 +6,7 @@ interface UseAudioOptions {
   audioSrc: string;
   verses: Verse[];
   onVerseEnd?: () => void;
+  autoPauseAtVerseEnd?: boolean;
 }
 
 interface VocalActivity {
@@ -19,6 +20,7 @@ interface UseAudioReturn {
   currentTime: number;
   duration: number;
   vocalActivity: VocalActivity;
+  isReady: boolean;
   play: () => void;
   pause: () => void;
   stop: () => void;
@@ -28,11 +30,14 @@ interface UseAudioReturn {
   initAudio: () => void;
 }
 
-export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): UseAudioReturn {
+export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = true }: UseAudioOptions): UseAudioReturn {
   const howlRef = useRef<Howl | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const versesRef = useRef<Verse[]>([]);
+  const onVerseEndRef = useRef(onVerseEnd);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -41,6 +46,7 @@ export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): Use
     energy: 0,
     dominantFrequency: 0,
   });
+  const [isReady, setIsReady] = useState(false);
   const verseIndexRef = useRef(0);
   const timeIntervalRef = useRef<number | null>(null);
   const analysisIntervalRef = useRef<number | null>(null);
@@ -50,8 +56,30 @@ export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): Use
   const VOICE_ENERGY_THRESHOLD = 0.015;
   const FFT_SIZE = 2048;
 
+  useEffect(() => {
+    versesRef.current = verses;
+  }, [verses]);
+
+  useEffect(() => {
+    onVerseEndRef.current = onVerseEnd;
+  }, [onVerseEnd]);
+
+  const cleanupAudioAnalysis = useCallback(() => {
+    if (analysisIntervalRef.current) {
+      clearInterval(analysisIntervalRef.current);
+      analysisIntervalRef.current = null;
+    }
+    if (sourceRef.current) {
+      try {
+        sourceRef.current.disconnect();
+      } catch (e) {}
+      sourceRef.current = null;
+    }
+    setVocalActivity({ isActive: false, energy: 0, dominantFrequency: 0 });
+  }, []);
+
   const analyzeVocalActivity = useCallback((): VocalActivity => {
-    if (!sourceRef.current || !analyserRef.current || !audioContextRef.current) {
+    if (!analyserRef.current || !audioContextRef.current) {
       return { isActive: false, energy: 0, dominantFrequency: 0 };
     }
 
@@ -91,71 +119,110 @@ export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): Use
   }, []);
 
   const startVocalAnalysis = useCallback(() => {
-    if (!howlRef.current || sourceRef.current || !audioContextRef.current) return;
+    if (!audioElementRef.current || !audioContextRef.current || !analyserRef.current) {
+      return;
+    }
 
     try {
-      const howlNode = (howlRef.current as any)._node;
-      if (howlNode && howlNode.length > 0) {
-        const audioEl = howlNode[0]?._node || howlNode[0];
-        if (audioEl && audioEl.tagName === 'AUDIO') {
-          sourceRef.current = audioContextRef.current.createMediaElementSource(audioEl as HTMLAudioElement);
-          sourceRef.current.connect(analyserRef.current!);
-          analyserRef.current!.connect(audioContextRef.current.destination);
-
-          if (analysisIntervalRef.current) clearInterval(analysisIntervalRef.current);
-          analysisIntervalRef.current = window.setInterval(() => {
-            const activity = analyzeVocalActivity();
-            setVocalActivity(activity);
-          }, 50);
-        }
+      if (sourceRef.current) {
+        try {
+          sourceRef.current.disconnect();
+        } catch (e) {}
       }
+      
+      sourceRef.current = audioContextRef.current.createMediaElementSource(audioElementRef.current);
+      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.connect(audioContextRef.current.destination);
+
+      if (analysisIntervalRef.current) {
+        clearInterval(analysisIntervalRef.current);
+      }
+      analysisIntervalRef.current = window.setInterval(() => {
+        const activity = analyzeVocalActivity();
+        setVocalActivity(activity);
+      }, 50);
     } catch (error) {
       console.warn('Could not initialize vocal analysis:', error);
     }
   }, [analyzeVocalActivity]);
 
-  const stopVocalAnalysis = useCallback(() => {
-    if (analysisIntervalRef.current) {
-      clearInterval(analysisIntervalRef.current);
-      analysisIntervalRef.current = null;
+  const initAudioContext = useCallback(() => {
+    if (audioContextRef.current) {
+      try {
+        if (audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close();
+        }
+      } catch (e) {}
     }
-    setVocalActivity({ isActive: false, energy: 0, dominantFrequency: 0 });
+    
+    audioContextRef.current = new AudioContext();
+    analyserRef.current = audioContextRef.current.createAnalyser();
+    analyserRef.current.fftSize = FFT_SIZE;
+    analyserRef.current.smoothingTimeConstant = 0.7;
   }, []);
 
+  const playVerse = useCallback((verseIdx: number) => {
+    if (!howlRef.current || !versesRef.current[verseIdx]) return;
+
+    const currentVerse = versesRef.current[verseIdx];
+    verseIndexRef.current = verseIdx;
+
+    howlRef.current.seek(currentVerse.timestamp);
+    howlRef.current.play();
+    setIsPlaying(true);
+  }, []);
+
+  const replayCurrentVerse = useCallback(() => {
+    if (versesRef.current.length === 0) return;
+    playVerse(verseIndexRef.current);
+  }, [playVerse]);
+
   const initAudio = useCallback(() => {
+    setIsReady(false);
+    cleanupAudioAnalysis();
+
     if (howlRef.current) {
       howlRef.current.unload();
+      howlRef.current = null;
     }
 
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = FFT_SIZE;
-      analyserRef.current.smoothingTimeConstant = 0.7;
-    }
+    initAudioContext();
 
     howlRef.current = new Howl({
       src: [audioSrc],
       html5: true,
       onplay: () => {
         setIsPlaying(true);
+        
+        const howl = howlRef.current;
+        if (howl) {
+          const node = (howl as any)._node;
+          const audioEl = node?.[0]?._node || node?.[0];
+          if (audioEl && audioEl.tagName === 'AUDIO') {
+            audioElementRef.current = audioEl as HTMLAudioElement;
+          }
+        }
+        
         startVocalAnalysis();
-        if (timeIntervalRef.current) clearInterval(timeIntervalRef.current);
+        
+        if (timeIntervalRef.current) {
+          clearInterval(timeIntervalRef.current);
+        }
         timeIntervalRef.current = window.setInterval(() => {
           if (howlRef.current) {
             const time = howlRef.current.seek() as number;
             setCurrentTime(time);
-            const currentVerse = verses[verseIndexRef.current];
-            if (currentVerse && time >= currentVerse.timestamp + currentVerse.duration) {
+            const currentVerse = versesRef.current[verseIndexRef.current];
+            if (currentVerse && autoPauseAtVerseEnd && time >= currentVerse.timestamp + currentVerse.duration) {
               howlRef.current.pause();
-              onVerseEnd?.();
+              onVerseEndRef.current?.();
             }
           }
         }, 100);
       },
       onpause: () => {
         setIsPlaying(false);
-        stopVocalAnalysis();
+        cleanupAudioAnalysis();
         if (timeIntervalRef.current) {
           clearInterval(timeIntervalRef.current);
           timeIntervalRef.current = null;
@@ -163,7 +230,7 @@ export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): Use
       },
       onstop: () => {
         setIsPlaying(false);
-        stopVocalAnalysis();
+        cleanupAudioAnalysis();
         if (timeIntervalRef.current) {
           clearInterval(timeIntervalRef.current);
           timeIntervalRef.current = null;
@@ -171,18 +238,23 @@ export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): Use
       },
       onload: () => {
         setDuration(howlRef.current?.duration() || 0);
+        setIsReady(true);
+      },
+      onloaderror: (_soundId, error) => {
+        console.error('Audio load error:', error);
+        setIsReady(false);
       },
       onend: () => {
         setIsPlaying(false);
-        stopVocalAnalysis();
-        onVerseEnd?.();
+        cleanupAudioAnalysis();
+        onVerseEndRef.current?.();
         if (timeIntervalRef.current) {
           clearInterval(timeIntervalRef.current);
           timeIntervalRef.current = null;
         }
       },
     });
-  }, [audioSrc, onVerseEnd, verses, startVocalAnalysis, stopVocalAnalysis]);
+  }, [audioSrc, startVocalAnalysis, cleanupAudioAnalysis, initAudioContext]);
 
   const play = useCallback(() => {
     howlRef.current?.play();
@@ -201,50 +273,34 @@ export function useAudio({ audioSrc, verses, onVerseEnd }: UseAudioOptions): Use
     setCurrentTime(time);
   }, []);
 
-  const playVerse = useCallback((verseIdx: number) => {
-    if (!howlRef.current || !verses[verseIdx]) return;
-
-    const currentVerse = verses[verseIdx];
-    verseIndexRef.current = verseIdx;
-
-    howlRef.current.seek(currentVerse.timestamp);
-    howlRef.current.play();
-    setIsPlaying(true);
-  }, [verses]);
-
-  const replayCurrentVerse = useCallback(() => {
-    if (verses.length === 0) return;
-    playVerse(verseIndexRef.current);
-  }, [verses, playVerse]);
-
   useEffect(() => {
     return () => {
+      cleanupAudioAnalysis();
       if (howlRef.current) {
         howlRef.current.unload();
+        howlRef.current = null;
       }
       if (timeIntervalRef.current) {
         clearInterval(timeIntervalRef.current);
       }
-      if (analysisIntervalRef.current) {
-        clearInterval(analysisIntervalRef.current);
-      }
-      if (audioContextRef.current) {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
       }
     };
-  }, []);
+  }, [cleanupAudioAnalysis]);
 
   useEffect(() => {
     if (audioSrc) {
       initAudio();
     }
-  }, [audioSrc, initAudio]);
+  }, [audioSrc]);
 
   return {
     isPlaying,
     currentTime,
     duration,
     vocalActivity,
+    isReady,
     play,
     pause,
     stop,

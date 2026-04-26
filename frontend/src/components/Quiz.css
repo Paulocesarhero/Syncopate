@@ -141,6 +141,25 @@
   border-radius: 16px;
   margin-bottom: 32px;
   text-align: center;
+  transition: all 0.3s ease;
+}
+
+.quiz__verse--success {
+  animation: successPulse 0.6s ease;
+  border-color: var(--color-success);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .quiz__verse-text {
@@ -217,6 +236,13 @@
   border-color: var(--color-error) !important;
   color: #0a0a14 !important;
   animation: shake 0.4s ease;
+}
+
+.quiz__option--tried {
+  background: var(--color-bg-card);
+  border-color: var(--color-text-muted);
+  color: var(--color-text-muted);
+  opacity: 0.6;
 }
 
 .quiz__option--reveal {
