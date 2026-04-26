@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { useToast, type ToastType } from '../context/ToastContext';
+import { useAppStore, type ToastType } from '../stores/appStore';
 import './Toast.css';
 
 const icons: Record<ToastType, string> = {
@@ -10,7 +10,7 @@ const icons: Record<ToastType, string> = {
 };
 
 export const ToastContainer = memo(function ToastContainer() {
-  const { toasts, hideToast } = useToast();
+  const { toasts, hideToast } = useAppStore();
 
   return (
     <div className="toast-container">

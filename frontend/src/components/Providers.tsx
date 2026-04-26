@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { AppProvider, ToastProvider } from '../context';
 import { ToastContainer } from './Toast';
 
 interface ProvidersProps {
@@ -8,11 +7,9 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <AppProvider>
-      <ToastProvider>
-        {children}
-        <ToastContainer />
-      </ToastProvider>
-    </AppProvider>
+    <>
+      {children}
+      <ToastContainer />
+    </>
   );
 }

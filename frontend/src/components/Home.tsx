@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { Song, Difficulty } from '../types';
-import { useApp } from '../context/AppContext';
-import { useToast } from '../context/ToastContext';
+import { useAppStore } from '../stores/appStore';
 import { uploadSong } from '../api/songs';
 import { DropZone } from './DropZone';
 import { SongList } from './SongList';
@@ -14,8 +13,7 @@ interface HomeProps {
 }
 
 export function Home({ onStartQuiz }: HomeProps) {
-  const { songs, difficulty, loading, error, setDifficulty, addSong } = useApp();
-  const { showToast } = useToast();
+  const { songs, difficulty, loading, error, setDifficulty, addSong, showToast } = useAppStore();
   const [uploading, setUploading] = useState(false);
 
   const handleFilesDropped = useCallback(async (files: { audio: File; lrc?: File }) => {
