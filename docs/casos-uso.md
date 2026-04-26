@@ -15,11 +15,12 @@
 
 ## UC-02: Iniciar Quiz
 **Actor**: Usuario  
+**Mecanismo de Resaltado**: El sistema detecta el verso actual que canta el artista mediante **análisis de ondas de sonido** (FFT - Fast Fourier Transform para extraer frecuencias, detección de energía en rangos vocálicos 300Hz-3kHz, y correlación con timestamps del archivo .lrc). Este análisis ocurre en tiempo real en el cliente para zero-latencia.
 **Flujo**:
 1. Usuario selecciona canción del listado
 2. Usuario elige dificultad (Fácil/Medio/Difícil)
 3. Sistema carga lyrics parseados desde .lrc
-4. Sistema reproduce el verso actual con resaltado tipo karaoke (las palabras que canta el cantante se resaltan en tiempo real, incluso si son palabras ocultas/blanks; si la canción se pausa, se mantiene el resaltado en la última palabra cantada)
+4. Sistema reproduce el verso actual con resaltado tipo karaoke: las palabras que canta el cantante se resaltan en tiempo real (incluso si son palabras ocultas/blanks); si la canción se pausa, se mantiene el resaltado en la última palabra cantada
 5. Sistema pausa la canción automáticamente al llegar al final del verso
 6. Sistema muestra el verso con palabras ocultas (blanks) según dificultad
 7. Sistema genera 4 opciones de palabras individuales (1 correcta + 3 distractores)
@@ -29,13 +30,14 @@
 
 ## UC-03: Responder Verso
 **Actor**: Usuario  
+**Mecanismo de Resaltado**: El sistema detecta el verso actual que canta el artista mediante **análisis de ondas de sonido** (FFT - Fast Fourier Transform para extraer frecuencias, detección de energía en rangos vocálicos 300Hz-3kHz, y correlación con timestamps del archivo .lrc). Este análisis ocurre en tiempo real en el cliente para zero-latencia.
 **Flujo**:
 1. Sistema muestra 4 opciones de palabras individuales (multiple choice)
 2. Usuario selecciona las palabras faltantes para completar los blanks del verso
 3. **Si todas las palabras son correctas**:
     - Animación de éxito
     - Score +1 por palabra correcta
-    - Canción reanuda reproducción y avanza al siguiente verso
+    - Canción reanuda reproducción.
 4. **Si alguna palabra es incorrecta**:
     - Feedback visual de error en la palabra incorrecta
     - Opción se marca como intentada
@@ -45,6 +47,7 @@
 
 ## UC-04: Replay Verso
 **Actor**: Usuario  
+**Mecanismo de Resaltado**: El sistema detecta el verso actual que canta el artista mediante **análisis de ondas de sonido** (FFT - Fast Fourier Transform para extraer frecuencias, detección de energía en rangos vocálicos 300Hz-3kHz, y correlación con timestamps del archivo .lrc). Este análisis ocurre en tiempo real en el cliente para zero-latencia.
 **Flujo**:
 1. Usuario hace clic en botón "Replay"
 2. Sistema reproduce nuevamente el verso actual con resaltado tipo karaoke

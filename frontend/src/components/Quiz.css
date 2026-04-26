@@ -109,6 +109,31 @@
   box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
+.quiz__vocal-indicator {
+  width: 8px;
+  height: 24px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: background 0.1s ease;
+}
+
+.quiz__vocal-indicator--active {
+  background: rgba(0, 212, 255, 0.3);
+}
+
+.quiz__vocal-bar {
+  width: 100%;
+  min-height: 4px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transition: height 0.05s ease;
+  box-shadow: 0 0 6px rgba(0, 212, 255, 0.8);
+}
+
 .quiz__verse {
   padding: 32px 24px;
   background: var(--color-bg-card);

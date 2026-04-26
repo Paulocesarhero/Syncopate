@@ -106,13 +106,13 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     // Pause handled by useAudio, no additional action needed
   }, []);
 
-  const { playVerse, replayCurrentVerse, currentTime, duration, seek, pause, play } = useAudio({
+  const { playVerse, replayCurrentVerse, currentTime, duration, seek, pause, play, vocalActivity } = useAudio({
     audioSrc: audioUrl,
     verses,
     onVerseEnd: handleVerseEnd,
   });
 
-  // Update current word based on audio time
+  // Update current word based on audio time and vocal activity (FFT analysis)
   useEffect(() => {
     if (!currentVerse || !currentVerse.words.length) return;
     
@@ -124,8 +124,10 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
       }
     );
     
-    setCurrentWordIdx(wordIdx >= 0 ? wordIdx : null);
-  }, [currentTime, currentVerse]);
+    // Only update if there's actual vocal activity or we're in a word region
+    const activeWordIdx = wordIdx >= 0 ? wordIdx : null;
+    setCurrentWordIdx(activeWordIdx);
+  }, [currentTime, currentVerse, vocalActivity.isActive]);
 
   // Load lyrics
   useEffect(() => {
@@ -257,6 +259,9 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
           value={currentTime}
           onChange={handleSeek}
         />
+        <div className={`quiz__vocal-indicator ${vocalActivity.isActive ? 'quiz__vocal-indicator--active' : ''}`}>
+          <div className="quiz__vocal-bar" style={{ height: `${vocalActivity.energy * 100}%` }}></div>
+        </div>
       </div>
 
       <div className="quiz__verse">
