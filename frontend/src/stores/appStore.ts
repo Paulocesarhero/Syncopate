@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import type { Song, Difficulty, UserProgress } from '../types';
-import { fetchSongs, saveProgress as saveProgressApi } from '../api/songs';
+import { create } from "zustand";
+import type { Song, Difficulty, UserProgress } from "../types";
+import { fetchSongs, saveProgress as saveProgressApi } from "../api/songs";
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = "success" | "error" | "info" | "warning";
 
 interface Toast {
   id: string;
@@ -28,14 +28,14 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   songs: [],
-  difficulty: 'easy',
+  difficulty: "easy",
   userProgress: new Map(),
   loading: true,
   error: null,
   toasts: [],
 
   setDifficulty: (difficulty) => {
-    localStorage.setItem('syncopate_difficulty', difficulty);
+    localStorage.setItem("syncopate_difficulty", difficulty);
     set({ difficulty });
   },
 
@@ -52,7 +52,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await saveProgressApi(progress);
     } catch (err) {
-      console.error('Error saving progress:', err);
+      console.error("Error saving progress:", err);
     }
   },
 
@@ -66,7 +66,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  showToast: (message, type = 'info') => {
+  showToast: (message, type = "info") => {
     const id = crypto.randomUUID();
     set((state) => ({
       toasts: [...state.toasts, { id, message, type }],
@@ -84,8 +84,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 }));
 
-if (typeof window !== 'undefined') {
-  const savedDifficulty = localStorage.getItem('syncopate_difficulty') as Difficulty;
+if (typeof window !== "undefined") {
+  const savedDifficulty = localStorage.getItem(
+    "syncopate_difficulty",
+  ) as Difficulty;
   if (savedDifficulty) {
     useAppStore.getState().setDifficulty(savedDifficulty);
   }

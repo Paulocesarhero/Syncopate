@@ -1,13 +1,13 @@
-import { useState, useCallback } from 'react';
-import type { Song, Difficulty } from './types';
-import { Providers } from './components/Providers';
-import { Home } from './components/Home';
-import { Quiz } from './components/Quiz';
-import './App.css';
+import { useState, useCallback } from "react";
+import type { Song, Difficulty } from "./types";
+import { Providers } from "./components/Providers";
+import { Home } from "./components/Home";
+import { Quiz } from "./components/Quiz";
+import "./App.css";
 
 function App() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
 
   const handleStartQuiz = useCallback((song: Song, diff: Difficulty) => {
     setCurrentSong(song);
@@ -21,11 +21,7 @@ function App() {
   if (currentSong) {
     return (
       <Providers>
-        <Quiz 
-          song={currentSong} 
-          difficulty={difficulty} 
-          onBack={handleBack} 
-        />
+        <Quiz song={currentSong} difficulty={difficulty} onBack={handleBack} />
       </Providers>
     );
   }

@@ -1,6 +1,6 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
-import { Howl } from 'howler';
-import type { Verse } from '../types';
+import { useRef, useState, useCallback, useEffect } from "react";
+import { Howl } from "howler";
+import type { Verse } from "../types";
 
 interface UseAudioOptions {
   audioSrc: string;
@@ -30,7 +30,12 @@ interface UseAudioReturn {
   initAudio: () => void;
 }
 
-export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = true }: UseAudioOptions): UseAudioReturn {
+export function useAudio({
+  audioSrc,
+  verses,
+  onVerseEnd,
+  autoPauseAtVerseEnd = true,
+}: UseAudioOptions): UseAudioReturn {
   const howlRef = useRef<Howl | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -83,7 +88,7 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
       return { isActive: false, energy: 0, dominantFrequency: 0 };
     }
 
-    if (audioContextRef.current.state === 'suspended') {
+    if (audioContextRef.current.state === "suspended") {
       audioContextRef.current.resume();
     }
 
@@ -119,7 +124,11 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
   }, []);
 
   const startVocalAnalysis = useCallback(() => {
-    if (!audioElementRef.current || !audioContextRef.current || !analyserRef.current) {
+    if (
+      !audioElementRef.current ||
+      !audioContextRef.current ||
+      !analyserRef.current
+    ) {
       return;
     }
 
@@ -129,8 +138,10 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
           sourceRef.current.disconnect();
         } catch (e) {}
       }
-      
-      sourceRef.current = audioContextRef.current.createMediaElementSource(audioElementRef.current);
+
+      sourceRef.current = audioContextRef.current.createMediaElementSource(
+        audioElementRef.current,
+      );
       sourceRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
 
@@ -142,19 +153,19 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
         setVocalActivity(activity);
       }, 50);
     } catch (error) {
-      console.warn('Could not initialize vocal analysis:', error);
+      console.warn("Could not initialize vocal analysis:", error);
     }
   }, [analyzeVocalActivity]);
 
   const initAudioContext = useCallback(() => {
     if (audioContextRef.current) {
       try {
-        if (audioContextRef.current.state !== 'closed') {
+        if (audioContextRef.current.state !== "closed") {
           audioContextRef.current.close();
         }
       } catch (e) {}
     }
-    
+
     audioContextRef.current = new AudioContext();
     analyserRef.current = audioContextRef.current.createAnalyser();
     analyserRef.current.fftSize = FFT_SIZE;
@@ -193,18 +204,18 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
       html5: true,
       onplay: () => {
         setIsPlaying(true);
-        
+
         const howl = howlRef.current;
         if (howl) {
           const node = (howl as any)._node;
           const audioEl = node?.[0]?._node || node?.[0];
-          if (audioEl && audioEl.tagName === 'AUDIO') {
+          if (audioEl && audioEl.tagName === "AUDIO") {
             audioElementRef.current = audioEl as HTMLAudioElement;
           }
         }
-        
+
         startVocalAnalysis();
-        
+
         if (timeIntervalRef.current) {
           clearInterval(timeIntervalRef.current);
         }
@@ -213,7 +224,11 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
             const time = howlRef.current.seek() as number;
             setCurrentTime(time);
             const currentVerse = versesRef.current[verseIndexRef.current];
-            if (currentVerse && autoPauseAtVerseEnd && time >= currentVerse.timestamp + currentVerse.duration) {
+            if (
+              currentVerse &&
+              autoPauseAtVerseEnd &&
+              time >= currentVerse.timestamp + currentVerse.duration
+            ) {
               howlRef.current.pause();
               onVerseEndRef.current?.();
             }
@@ -241,7 +256,7 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
         setIsReady(true);
       },
       onloaderror: (_soundId, error) => {
-        console.error('Audio load error:', error);
+        console.error("Audio load error:", error);
         setIsReady(false);
       },
       onend: () => {
@@ -283,7 +298,10 @@ export function useAudio({ audioSrc, verses, onVerseEnd, autoPauseAtVerseEnd = t
       if (timeIntervalRef.current) {
         clearInterval(timeIntervalRef.current);
       }
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
         audioContextRef.current.close();
       }
     };

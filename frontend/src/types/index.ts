@@ -18,7 +18,7 @@ export interface Verse {
   words: Word[];
 }
 
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = "easy" | "medium" | "hard";
 
 export interface QuizState {
   song: Song;

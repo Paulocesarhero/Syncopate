@@ -1,12 +1,15 @@
-import { memo } from 'react';
-import './Loading.css';
+import { memo } from "react";
+import "./Loading.css";
 
 interface LoadingProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   message?: string;
 }
 
-export const Loading = memo(function Loading({ size = 'md', message }: LoadingProps) {
+export const Loading = memo(function Loading({
+  size = "md",
+  message,
+}: LoadingProps) {
   return (
     <div className={`loading loading--${size}`}>
       <div className="loading__spinner">
@@ -17,7 +20,11 @@ export const Loading = memo(function Loading({ size = 'md', message }: LoadingPr
   );
 });
 
-export const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
+export const Skeleton = memo(function Skeleton({
+  className = "",
+}: {
+  className?: string;
+}) {
   return <div className={`skeleton ${className}`.trim()} />;
 });
 

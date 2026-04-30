@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
-import type { Word } from '../types';
+import { useCallback, useRef, useState, useEffect } from "react";
+import type { Word } from "../types";
 
 interface UseKaraokeSyncOptions {
   words: Word[];
@@ -19,7 +19,12 @@ interface KaraokeState {
 const MIN_VOCAL_FREQ = 300;
 const MAX_VOCAL_FREQ = 3000;
 
-export function useKaraokeSync({ words, currentTime, isPlaying, audioElement }: UseKaraokeSyncOptions) {
+export function useKaraokeSync({
+  words,
+  currentTime,
+  isPlaying,
+  audioElement,
+}: UseKaraokeSyncOptions) {
   const [karaokeState, setKaraokeState] = useState<KaraokeState>({
     currentWordIndex: null,
     vocalActivity: { isActive: false, energy: 0 },
@@ -44,39 +49,49 @@ export function useKaraokeSync({ words, currentTime, isPlaying, audioElement }: 
       analyserRef.current.fftSize = FFT_SIZE;
       analyserRef.current.smoothingTimeConstant = 0.7;
 
-      sourceRef.current = audioContextRef.current.createMediaElementSource(audioElement);
+      sourceRef.current =
+        audioContextRef.current.createMediaElementSource(audioElement);
       sourceRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
     } catch (error) {
-      console.error('Error initializing audio analysis:', error);
+      console.error("Error initializing audio analysis:", error);
     }
   }, [audioElement]);
 
-  const findCurrentWordIndex = useCallback((time: number, wordList: Word[]): number | null => {
-    if (!wordList || wordList.length === 0) return null;
+  const findCurrentWordIndex = useCallback(
+    (time: number, wordList: Word[]): number | null => {
+      if (!wordList || wordList.length === 0) return null;
 
-    for (let i = 0; i < wordList.length; i++) {
-      const currentWord = wordList[i];
-      const nextWord = wordList[i + 1];
+      for (let i = 0; i < wordList.length; i++) {
+        const currentWord = wordList[i];
+        const nextWord = wordList[i + 1];
 
-      if (i === wordList.length - 1) {
-        if (time >= currentWord.timestamp) {
+        if (i === wordList.length - 1) {
+          if (time >= currentWord.timestamp) {
+            return i;
+          }
+        } else if (
+          time >= currentWord.timestamp &&
+          (!nextWord || time < nextWord.timestamp)
+        ) {
           return i;
         }
-      } else if (time >= currentWord.timestamp && (!nextWord || time < nextWord.timestamp)) {
-        return i;
       }
-    }
 
-    return null;
-  }, []);
+      return null;
+    },
+    [],
+  );
 
-  const analyzeVocalActivity = useCallback((): { isActive: boolean; energy: number } => {
+  const analyzeVocalActivity = useCallback((): {
+    isActive: boolean;
+    energy: number;
+  } => {
     if (!analyserRef.current || !audioContextRef.current) {
       return { isActive: false, energy: 0 };
     }
 
-    if (audioContextRef.current.state === 'suspended') {
+    if (audioContextRef.current.state === "suspended") {
       audioContextRef.current.resume();
     }
 
@@ -115,7 +130,13 @@ export function useKaraokeSync({ words, currentTime, isPlaying, audioElement }: 
     if (isPlaying) {
       animationFrameRef.current = requestAnimationFrame(updateKaraokeState);
     }
-  }, [currentTime, words, isPlaying, findCurrentWordIndex, analyzeVocalActivity]);
+  }, [
+    currentTime,
+    words,
+    isPlaying,
+    findCurrentWordIndex,
+    analyzeVocalActivity,
+  ]);
 
   useEffect(() => {
     if (audioElement) {
@@ -142,7 +163,7 @@ export function useKaraokeSync({ words, currentTime, isPlaying, audioElement }: 
 
   useEffect(() => {
     const wordIndex = findCurrentWordIndex(currentTime, words);
-    setKaraokeState(prev => ({
+    setKaraokeState((prev) => ({
       ...prev,
       currentWordIndex: wordIndex,
     }));
