@@ -26,7 +26,7 @@ interface UseAudioReturn {
   stop: () => void;
   seek: (time: number) => void;
   playVerse: (verseIdx: number) => void;
-  replayCurrentVerse: () => void;
+  replayCurrentVerse: (verseIdx: number) => void;
   initAudio: () => void;
 }
 
@@ -183,10 +183,13 @@ export function useAudio({
     setIsPlaying(true);
   }, []);
 
-  const replayCurrentVerse = useCallback(() => {
-    if (versesRef.current.length === 0) return;
-    playVerse(verseIndexRef.current);
-  }, [playVerse]);
+  const replayCurrentVerse = useCallback(
+    (verseIdx: number) => {
+      if (versesRef.current.length === 0) return;
+      playVerse(verseIdx);
+    },
+    [playVerse],
+  );
 
   const initAudio = useCallback(() => {
     setIsReady(false);

@@ -44,6 +44,7 @@ function generateWordOptions(
 }
 
 export function Quiz({ song, difficulty, onBack }: QuizProps) {
+    const [hasAdvancedToNextVerse, setHasAdvancedToNextVerse] = useState(false);
   const [verses, setVerses] = useState<Verse[]>([]);
   const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -159,7 +160,7 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     ) {
       setVerseEnded(false);
       setIsReplaying(true);
-      replayCurrentVerse();
+      replayCurrentVerse(currentVerseIdx);
     }
   }, [
     currentTime,
@@ -187,14 +188,19 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     const pastCurrentVerse = currentTime > currentVerseEndTime + 0.5;
 
     if (isInNextVerseTimestamp && (hasVocalActivity || pastCurrentVerse)) {
-      pause();
       const nextVerseIdx = currentVerseIdx + 1;
       setVerseCompleted(false);
       setSuccessAnimation(false);
       setCurrentVerseIdx(nextVerseIdx);
-      setTimeout(() => {
-        playVerse(nextVerseIdx);
-      }, 100);
+      setHasAdvancedToNextVerse(false);
+    }
+    if (pastCurrentVerse) {
+      const nextVerseIdx = currentVerseIdx + 1;
+      if (!hasAdvancedToNextVerse) {
+        setHasAdvancedToNextVerse(true);
+      } else {
+        playVerse(currentVerseIdx);
+      }
     }
   }, [
     verseCompleted,
@@ -205,6 +211,7 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     verses,
     pause,
     playVerse,
+    hasAdvancedToNextVerse,
   ]);
 
   useEffect(() => {
@@ -215,10 +222,7 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
       currentVerse &&
       isReady
     ) {
-      const timeout = setTimeout(() => {
-        playVerse(0);
-      }, 500);
-      return () => clearTimeout(timeout);
+      playVerse(0);
     }
   }, [
     loading,
@@ -303,13 +307,14 @@ export function Quiz({ song, difficulty, onBack }: QuizProps) {
     setFilledWords(new Map());
     setVerseEnded(false);
     setIsReplaying(false);
+    setHasAdvancedToNextVerse(false);
   }, [currentVerseIdx]);
 
   const handleReplay = useCallback(() => {
     setIsReplaying(true);
     setVerseEnded(false);
-    replayCurrentVerse();
-  }, [replayCurrentVerse]);
+    replayCurrentVerse(currentVerseIdx);
+  }, [replayCurrentVerse, currentVerseIdx]);
 
   const handleSeek = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
