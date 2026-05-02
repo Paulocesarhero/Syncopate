@@ -1,5 +1,12 @@
 # Syncopate
 
+
+
+https://github.com/user-attachments/assets/be371ab2-784a-4c0e-91cb-686474c2eb8c
+
+🎵 Demo Music: Wade by Josh Woodward. Free download: [https://www.joshwoodward.com/](https://www.joshwoodward.com/) Shout out to the people who create for the love of art.
+
+
 A local web application for learning English through songs with synchronized lyrics. Practice listening and fill in the blanks as you follow along with your favorite tracks.
 
 ## Features
@@ -102,6 +109,31 @@ The `.lrc` format uses timestamps:
 4. **Blanks appear** — Words are hidden based on chosen difficulty
 5. **User answers** — Select the correct word from 4 options
 6. **Score updates** — Progress saves locally when the song ends
+
+🚀 Future Roadmap
+🐳 Infrastructure & Deployment
+
+    Dockerization for NAS Environments:
+
+        Containerize the application using Docker and Docker Compose.
+
+        Optimize images for low-resource environments (e.g., Synology/QNAP NAS) using lightweight Alpine-based images.
+
+        Implement persistent volume mapping for music libraries and configuration files.
+
+🎵 Core Features
+
+    Song Management (CRUD):
+
+        Develop a full CRUD (Create, Read, Update, Delete) interface to manage the localized song database.
+
+        Integration with FastAPI (backend) and React (frontend) to handle metadata and file paths.
+
+    LRC File Editor:
+
+        Build an interactive, time-synced editor to create and modify .lrc (Lyric) files.
+
+        Real-time preview to sync lyrics perfectly with the audio playback.
 
 ## License
 
