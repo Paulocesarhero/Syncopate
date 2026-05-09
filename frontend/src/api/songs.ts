@@ -58,3 +58,13 @@ export async function uploadSong(
   const data = await res.json();
   return data.song;
 }
+
+export async function deleteSong(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/songs/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.detail || "Delete failed");
+  }
+}

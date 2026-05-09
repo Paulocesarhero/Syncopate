@@ -10,7 +10,11 @@ interface DifficultySelectorProps {
 const options: { value: Difficulty; label: string; description: string }[] = [
   { value: "easy", label: "Fácil", description: "1 palabra en blanco" },
   { value: "medium", label: "Medio", description: "2 palabras en blanco" },
-  { value: "hard", label: "Difícil", description: "verso completo" },
+  {
+    value: "hard",
+    label: "Difícil",
+    description: "verso completo con algunas pistas",
+  },
 ];
 
 export const DifficultySelector = memo(function DifficultySelector({

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import type { Song, Difficulty } from "../types";
 import { useAppStore } from "../stores/appStore";
-import { uploadSong } from "../api/songs";
+import { uploadSong, deleteSong as deleteSongApi } from "../api/songs";
 import { DropZone } from "./DropZone";
 import { SongList } from "./SongList";
 import { DifficultySelector } from "./DifficultySelector";
@@ -21,7 +21,21 @@ export function Home({ onStartQuiz }: HomeProps) {
     setDifficulty,
     addSong,
     showToast,
+    removeSong,
   } = useAppStore();
+    const handleDeleteSong = useCallback(
+      async (song: Song) => {
+        if (!window.confirm(`¿Eliminar la canción "${song.title}"?`)) return;
+        try {
+          await deleteSongApi(song.id);
+          removeSong(song.id);
+          showToast("Canción eliminada", "success");
+        } catch (err) {
+          showToast("Error al eliminar la canción", "error");
+        }
+      },
+      [removeSong, showToast],
+    );
   const [uploading, setUploading] = useState(false);
 
   const handleFilesDropped = useCallback(
@@ -94,7 +108,11 @@ export function Home({ onStartQuiz }: HomeProps) {
               ))}
             </div>
           ) : (
-            <SongList songs={songs} onSelectSong={handleSelectSong} />
+            <SongList
+              songs={songs}
+              onSelectSong={handleSelectSong}
+              onDeleteSong={handleDeleteSong}
+            />
           )}
         </div>
       </main>

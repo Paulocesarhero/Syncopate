@@ -20,6 +20,7 @@ interface AppState {
 
   setDifficulty: (difficulty: Difficulty) => void;
   addSong: (song: Song) => void;
+  removeSong: (songId: string) => void;
   updateProgress: (progress: UserProgress) => Promise<void>;
   refreshSongs: () => Promise<void>;
   showToast: (message: string, type?: ToastType) => void;
@@ -41,6 +42,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addSong: (song) => {
     set((state) => ({ songs: [...state.songs, song] }));
+  },
+
+  removeSong: (songId: string) => {
+    set((state) => ({ songs: state.songs.filter((s) => s.id !== songId) }));
   },
 
   updateProgress: async (progress) => {

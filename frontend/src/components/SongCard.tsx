@@ -6,12 +6,14 @@ interface SongCardProps {
   song: Song;
   onSelect: (song: Song) => void;
   onClick?: () => void;
+  onDelete?: (song: Song) => void;
 }
 
 export const SongCard = memo(function SongCard({
   song,
   onSelect,
   onClick,
+  onDelete,
 }: SongCardProps) {
   return (
     <div className="song-card" onClick={onClick}>
@@ -52,6 +54,37 @@ export const SongCard = memo(function SongCard({
           <polygon points="5 3 19 12 5 21 5 3" />
         </svg>
       </button>
+      {onDelete && (
+        <button
+          className="song-card__delete"
+          title="Eliminar canción"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(song);
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <line
+              x1="7.5"
+              y1="7.5"
+              x2="16.5"
+              y2="16.5"
+              stroke="black"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <line
+              x1="16.5"
+              y1="7.5"
+              x2="7.5"
+              y2="16.5"
+              stroke="black"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 });
